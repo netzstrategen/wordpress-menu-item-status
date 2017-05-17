@@ -65,9 +65,13 @@ EOD;
    * @implements wp_update_nav_menu
    */
   public static function wp_update_nav_menu(){
-    foreach ($_POST['menu-item-title'] as $item_id => $value){
-      $value = isset($_POST['menu-item-status'][$item_id]) ? 'checked' : '';
-      update_post_meta($item_id, '_menu_item_status', $value);
+    foreach ($_POST['menu-item-status'] as $item_id => $value) {
+      if (0 === $value = (int) $value) {
+        update_post_meta($item_id, '_menu_item_status', $value);
+      }
+      else {
+        delete_post_meta($item_id, '_menu_item_status');
+      }
     }
   }
 
@@ -77,14 +81,10 @@ EOD;
    * @implements wp_get_nav_menu_items
    */
   public static function wp_get_nav_menu_items($items, $menu, $args) {
-    foreach($items as $key => $item) {
-      if (get_post_meta($item->ID, '_menu_item_status', TRUE) === 'checked') {
+    foreach ($items as $item) {
+      $status = get_post_meta($item->ID, '_menu_item_status', TRUE);
+      if ($status !== '' && 0 === (int) $status) {
         $item->classes[] = 'menu-item--hidden';
-      }
-      else {
-        if(($key = array_search('menu-item--hidden', $item->classes)) !== FALSE) {
-          unset($item->classes[$key]);
-        }
       }
     }
     return $items;
