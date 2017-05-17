@@ -33,4 +33,4 @@ function classloader($class) {
 spl_autoload_register(__NAMESPACE__ . '\classloader');
 
 add_action('plugins_loaded', __NAMESPACE__ . '\Plugin::loadTextdomain');
-add_action('init', __NAMESPACE__ . '\Plugin::init', 20);
+add_action('init', __NAMESPACE__ . '\Plugin::init');

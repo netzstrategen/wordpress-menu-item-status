@@ -104,7 +104,7 @@ EOD;
    */
   public static function getBaseUrl() {
     if (!isset(static::$baseUrl)) {
-      static::$baseUrl = plugins_url('', static::getBasePath() . '/menu-item-status.php');
+      static::$baseUrl = plugins_url('', static::getBasePath() . '/plugin.php');
     }
     return static::$baseUrl;
   }
