@@ -38,6 +38,7 @@ class Plugin {
     add_action('wp_head', __CLASS__ . '::wp_head', 100);
     add_action('wp_update_nav_menu', __CLASS__ . '::wp_update_nav_menu');
     add_filter('wp_get_nav_menu_items', __CLASS__ . '::wp_get_nav_menu_items', 10, 3);
+    add_filter('walker_nav_menu_start_el', __CLASS__ . '::walker_nav_menu_start_el', 10, 4);
 
     add_filter('wp_edit_nav_menu_walker', function () {
       return __NAMESPACE__ . '\WalkerNavMenuEditStatus';
@@ -69,8 +70,9 @@ EOD;
       if (0 === $value = (int) $value) {
         update_post_meta($item_id, '_menu_item_status', $value);
       }
-      else {
-        delete_post_meta($item_id, '_menu_item_status');
+      if (isset($_POST['menu-item-link-status'][$item_id])) {
+        $value = $_POST['menu-item-link-status'][$item_id];
+        update_post_meta($item_id, '_menu_item_link_status', $value);
       }
     }
   }
@@ -81,13 +83,31 @@ EOD;
    * @implements wp_get_nav_menu_items
    */
   public static function wp_get_nav_menu_items($items, $menu, $args) {
-    foreach ($items as $item) {
-      $status = get_post_meta($item->ID, '_menu_item_status', TRUE);
-      if ($status !== '' && 0 === (int) $status) {
+    foreach ($items as $key => $item) {
+      if (FALSE === (bool) get_post_meta($item->ID, '_menu_item_status', TRUE)) {
         $item->classes[] = 'menu-item--hidden';
+      }
+      elseif (FALSE !== $key = array_search('menu-item--hidden', $item->classes)) {
+        unset($item->classes[$key]);
       }
     }
     return $items;
+  }
+
+  /**
+   * Removes <a> HTML tag if item link status is checked.
+   *
+   * @implements walker_nav_menu_start_el
+   */
+  public static function walker_nav_menu_start_el($item_output, $item, $depth, $args) {
+    if (FALSE === (bool) get_post_meta($item->ID, '_menu_item_link_status', TRUE)) {
+      $item_output = $args->before;
+      $item_output .= '<span ' . $item->attributes . '>';
+      $item_output .= $args->link_before . $item->title . $args->link_after;
+      $item_output .= '</span>';
+      $item_output .= $args->after;
+    }
+    return $item_output;
   }
 
   /**
