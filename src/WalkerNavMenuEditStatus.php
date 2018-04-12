@@ -17,13 +17,22 @@ class WalkerNavMenuEditStatus extends \Walker_Nav_Menu_Edit {
 
     $item_id = esc_attr($item->ID);
     $status = get_post_meta($item_id, '_menu_item_status', TRUE);
-    $status = $status !== '' ? (int) $status : 1;
+    $link_status = get_post_meta($item_id, '_menu_item_link_status', TRUE);
     $form_item = '
           <p class="field-checkbox description description-thin">
             <label for="edit-menu-item-status-' . $item_id . '">
               <input type="hidden" name="menu-item-status[' . $item_id . ']" value="1" />
-              <input type="checkbox" id="edit-menu-item-status-' . $item_id . '" class="edit-menu-item-status" name="menu-item-status[' . $item_id . ']" value="0"' . checked($status, 0, FALSE) . ' />
-                ' . __('Hidden') . '
+              <input type="checkbox" id="edit-menu-item-status-' . $item_id . '" class="edit-menu-item-status" name="menu-item-status[' . $item_id . ']" value="checked"' . checked($status, 'checked', FALSE) . ' />
+                ' . __('Hidden', Plugin::L10N) . '
+            </label>
+          </p>
+';
+    $form_item .= '
+          <p class="field-checkbox description description-thin">
+            <label for="edit-menu-item-link-status' . $item_id . '">
+              <input type="hidden" name="menu-item-link-status[' . $item_id . ']" value="1" />
+              <input type="checkbox" id="edit-menu-item-link-status-' . $item_id . '" class="edit-menu-item-link-status" name="menu-item-link-status[' . $item_id . ']" value="checked"' . checked($link_status, 'checked', FALSE) . ' />
+                ' . __('Without link', Plugin::L10N) . '
             </label>
           </p>
 ';

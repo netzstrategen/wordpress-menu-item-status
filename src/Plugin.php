@@ -38,6 +38,7 @@ class Plugin {
     add_action('wp_head', __CLASS__ . '::wp_head', 100);
     add_action('wp_update_nav_menu', __CLASS__ . '::wp_update_nav_menu');
     add_filter('wp_get_nav_menu_items', __CLASS__ . '::wp_get_nav_menu_items', 10, 3);
+    add_filter('walker_nav_menu_start_el', __CLASS__ . '::walker_nav_menu_start_el', 10, 4);
 
     add_filter('wp_edit_nav_menu_walker', function () {
       return __NAMESPACE__ . '\WalkerNavMenuEditStatus';
@@ -65,12 +66,18 @@ EOD;
    * @implements wp_update_nav_menu
    */
   public static function wp_update_nav_menu(){
-    foreach ($_POST['menu-item-status'] as $item_id => $value) {
-      if (0 === $value = (int) $value) {
-        update_post_meta($item_id, '_menu_item_status', $value);
-      }
-      else {
-        delete_post_meta($item_id, '_menu_item_status');
+    $options = [
+      'menu-item-status' =>  '_menu_item_status',
+      'menu-item-link-status' => '_menu_item_link_status',
+    ];
+    foreach ($options as $option_name => $option_value) {
+      foreach ($_POST[$option_name] as $item_id => $value) {
+        if ($value === 'checked') {
+          update_post_meta($item_id, $option_value, $value);
+        }
+        else {
+          delete_post_meta($item_id, $option_value);
+        }
       }
     }
   }
@@ -81,13 +88,31 @@ EOD;
    * @implements wp_get_nav_menu_items
    */
   public static function wp_get_nav_menu_items($items, $menu, $args) {
-    foreach ($items as $item) {
-      $status = get_post_meta($item->ID, '_menu_item_status', TRUE);
-      if ($status !== '' && 0 === (int) $status) {
+    foreach ($items as $key => $item) {
+      if (get_post_meta($item->ID, '_menu_item_status', TRUE) === 'checked') {
         $item->classes[] = 'menu-item--hidden';
+      }
+      elseif (FALSE !== $key = array_search('menu-item--hidden', $item->classes)) {
+        unset($item->classes[$key]);
       }
     }
     return $items;
+  }
+
+  /**
+   * Removes <a> HTML tag if item link status is checked.
+   *
+   * @implements walker_nav_menu_start_el
+   */
+  public static function walker_nav_menu_start_el($item_output, $item, $depth, $args) {
+    if (get_post_meta($item->ID, '_menu_item_link_status', TRUE) === 'checked') {
+      $item_output = $args->before;
+      $item_output .= '<span ' . $item->attributes . '>';
+      $item_output .= $args->link_before . $item->title . $args->link_after;
+      $item_output .= '</span>';
+      $item_output .= $args->after;
+    }
+    return $item_output;
   }
 
   /**

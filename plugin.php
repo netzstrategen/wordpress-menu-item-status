@@ -2,7 +2,7 @@
 
 /*
   Plugin Name: Menu Item Status
-  Version: 1.0.0
+  Version: 1.1.0
   Text Domain: menu-item-status
   Description: Adds possibility to hide/show menu items.
   Author: netzstrategen
